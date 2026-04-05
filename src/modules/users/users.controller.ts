@@ -43,16 +43,16 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.ANALYST)
-  @ApiOperation({ summary: 'List all users with pagination & filters [ADMIN, ANALYST]' })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List all users with pagination & filters [ADMIN only]' })
   @ApiOkResponse({ description: 'Paginated list of users' })
   async findAll(@Query() query: UserQueryDto) {
     return this.usersService.findAll(query);
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.ANALYST)
-  @ApiOperation({ summary: 'Get a user by ID [ADMIN, ANALYST]' })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get a user by ID [ADMIN only]' })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiOkResponse({ description: 'User found' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {

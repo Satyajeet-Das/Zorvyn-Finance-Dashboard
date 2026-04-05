@@ -7,14 +7,16 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from '../../../generated/prisma/client';
+import { Role, User } from '../../../generated/prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { DashboardService } from './dashboard.service';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
 @Controller('dashboard')
+@Roles(Role.VIEWER, Role.ANALYST, Role.ADMIN)
 @UseInterceptors(CacheInterceptor)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}

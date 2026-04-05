@@ -21,8 +21,9 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from '../../../generated/prisma/client';
+import { Role, User } from '../../../generated/prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -35,9 +36,10 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post()
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Create a transaction',
-    description: 'ADMIN and ANALYST can create transactions for themselves. VIEWER cannot create.',
+    description: 'ADMIN only. Creates a transaction record.',
   })
   @ApiCreatedResponse({ description: 'Transaction created' })
   async create(
@@ -48,10 +50,11 @@ export class TransactionsController {
   }
 
   @Get()
+  @Roles(Role.ADMIN, Role.ANALYST)
   @ApiOperation({
     summary: 'List transactions',
     description:
-      'ADMIN/ANALYST can view all and filter by userId. VIEWER sees only their own.',
+      'ADMIN/ANALYST can view records and optionally filter by userId.',
   })
   @ApiOkResponse({ description: 'Paginated transactions list' })
   async findAll(
@@ -62,6 +65,7 @@ export class TransactionsController {
   }
 
   @Get(':id')
+  @Roles(Role.ADMIN, Role.ANALYST)
   @ApiOperation({ summary: 'Get a transaction by ID' })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiOkResponse({ description: 'Transaction found' })
@@ -73,9 +77,10 @@ export class TransactionsController {
   }
 
   @Patch(':id')
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Update a transaction',
-    description: 'ADMIN can update any. ANALYST/VIEWER can only update their own.',
+    description: 'ADMIN only. Updates a transaction record.',
   })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiOkResponse({ description: 'Transaction updated' })
@@ -88,10 +93,11 @@ export class TransactionsController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a transaction (soft delete)',
-    description: 'ADMIN can delete any. ANALYST/VIEWER can only delete their own.',
+    description: 'ADMIN only. Soft-deletes a transaction record.',
   })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiNoContentResponse({ description: 'Transaction deleted' })
