@@ -169,18 +169,21 @@ test/
 | `POST /auth/login` | ✅ | ✅ | ✅ |
 | `GET /auth/profile` | ✅ | ✅ | ✅ |
 | `POST /users` | ❌ | ❌ | ✅ |
-| `GET /users` | ❌ | ✅ | ✅ |
-| `GET /users/:id` | ❌ | ✅ | ✅ |
+| `GET /users` | ❌ | ❌ | ✅ |
+| `GET /users/:id` | ❌ | ❌ | ✅ |
 | `PATCH /users/:id` | ❌ | ❌ | ✅ |
 | `DELETE /users/:id` | ❌ | ❌ | ✅ |
-| `POST /transactions` | ❌ | ✅ own | ✅ any |
-| `GET /transactions` | ✅ own only | ✅ all | ✅ all |
-| `GET /transactions/:id` | ✅ own only | ✅ any | ✅ any |
-| `PATCH /transactions/:id` | ✅ own only | ✅ own only | ✅ any |
-| `DELETE /transactions/:id` | ✅ own only | ✅ own only | ✅ any |
-| `GET /dashboard/*` | ✅ own data | ✅ all data | ✅ all data |
+| `POST /transactions` | ❌ | ❌ | ✅ |
+| `GET /transactions` | ❌ | ✅ | ✅ |
+| `GET /transactions/:id` | ❌ | ✅ | ✅ |
+| `PATCH /transactions/:id` | ❌ | ❌ | ✅ |
+| `DELETE /transactions/:id` | ❌ | ❌ | ✅ |
+| `GET /dashboard/*` | ✅ | ✅ | ✅ |
 
-> **Note:** VIEWER role cannot create transactions. This is enforced at the service layer, not just via `@Roles()` — ensuring the rule survives even if the guard is bypassed in future.
+> **Policy summary:**
+> - **VIEWER**: can only view dashboard data.
+> - **ANALYST**: can view transaction records and dashboard insights.
+> - **ADMIN**: can create, update, and manage transaction records and users.
 
 ---
 
@@ -282,8 +285,8 @@ GET  /api/v1/auth/profile     — Get current user (authenticated)
 
 ```
 POST   /api/v1/users          — Create user         [ADMIN]
-GET    /api/v1/users          — List users           [ADMIN, ANALYST]
-GET    /api/v1/users/:id      — Get user by ID       [ADMIN, ANALYST]
+GET    /api/v1/users          — List users           [ADMIN]
+GET    /api/v1/users/:id      — Get user by ID       [ADMIN]
 PATCH  /api/v1/users/:id      — Update user          [ADMIN]
 DELETE /api/v1/users/:id      — Soft-delete user     [ADMIN]
 ```
@@ -293,11 +296,11 @@ DELETE /api/v1/users/:id      — Soft-delete user     [ADMIN]
 ### Transactions
 
 ```
-POST   /api/v1/transactions        — Create transaction  [ANALYST, ADMIN]
-GET    /api/v1/transactions        — List transactions   [All roles, scoped]
-GET    /api/v1/transactions/:id    — Get by ID           [All roles, scoped]
-PATCH  /api/v1/transactions/:id    — Update              [Owner or ADMIN]
-DELETE /api/v1/transactions/:id    — Soft-delete         [Owner or ADMIN]
+POST   /api/v1/transactions        — Create transaction  [ADMIN]
+GET    /api/v1/transactions        — List transactions   [ANALYST, ADMIN]
+GET    /api/v1/transactions/:id    — Get by ID           [ANALYST, ADMIN]
+PATCH  /api/v1/transactions/:id    — Update              [ADMIN]
+DELETE /api/v1/transactions/:id    — Soft-delete         [ADMIN]
 ```
 
 **List query params:** `page`, `limit`, `type`, `category`, `dateFrom`, `dateTo`, `amountMin`, `amountMax`, `userId`
@@ -381,17 +384,18 @@ docker compose exec app npx ts-node prisma/seed.ts
 All `DELETE` operations set `deletedAt` timestamp rather than hard deleting. Every query filters `deletedAt: null`. This preserves audit trails and foreign key integrity.
 
 ### Scoped Data Access
-Rather than a single `@Roles()` decorator on `GET /transactions`, access scoping is handled in the **service layer**:
-- VIEWERs are automatically pinned to `userId = currentUser.id`
-- ANALYSTs/ADMINs may optionally pass `userId` to filter
+Read access is role-gated at the controller layer and filtered in the service/repository:
+- VIEWERs are restricted to dashboard endpoints only
+- ANALYSTs/ADMINs can query transaction records
+- `userId` remains available for record filtering where permitted
 
-This makes the policy explicit in code, not just in metadata.
+This keeps role intent explicit in both metadata and query behavior.
 
 ### Password Validation
 Passwords must contain uppercase, lowercase, a digit, and a special character (enforced via regex in DTO). bcrypt rounds are configurable (default 12).
 
 ### Transaction Ownership vs Role
-The `ANALYST` role can read all transactions but can only **modify/delete their own**. Full mutation rights on any record are reserved for `ADMIN`. This mirrors real-world finance systems where analysts have read-wide but write-narrow authority.
+The `ANALYST` role is read-only for records and insights. All record mutations (`create`, `update`, `delete`) and user management are reserved for `ADMIN`.
 
 ### Redis Cache Strategy
 Dashboard endpoints use `CacheInterceptor` with per-route TTLs:
