@@ -178,7 +178,11 @@ test/
 | `GET /transactions/:id` | ❌ | ✅ | ✅ |
 | `PATCH /transactions/:id` | ❌ | ❌ | ✅ |
 | `DELETE /transactions/:id` | ❌ | ❌ | ✅ |
-| `GET /dashboard/*` | ✅ | ✅ | ✅ |
+| `GET /dashboard/overview` | ✅ | ✅ | ✅ |
+| `GET /dashboard/summary` | ✅ | ✅ | ✅ |
+| `GET /dashboard/recent` | ✅ | ✅ | ✅ |
+| `GET /dashboard/categories` | ❌ | ✅ | ✅ |
+| `GET /dashboard/trends` | ❌ | ✅ | ✅ |
 
 > **Policy summary:**
 > - **VIEWER**: can only view dashboard data.
@@ -308,11 +312,11 @@ DELETE /api/v1/transactions/:id    — Soft-delete         [ADMIN]
 ### Dashboard
 
 ```
-GET /api/v1/dashboard/overview    — Full dashboard in one call  [All roles]
-GET /api/v1/dashboard/summary     — Income/expense totals       [All roles]
-GET /api/v1/dashboard/categories  — Category breakdown          [All roles]
-GET /api/v1/dashboard/trends      — Monthly trends              [All roles]
-GET /api/v1/dashboard/recent      — Recent activity             [All roles]
+GET /api/v1/dashboard/overview    — Full dashboard in one call   [All roles]
+GET /api/v1/dashboard/summary     — Income/expense totals        [All roles]
+GET /api/v1/dashboard/recent      — Recent activity              [All roles]
+GET /api/v1/dashboard/categories  — Category breakdown           [ANALYST, ADMIN]
+GET /api/v1/dashboard/trends      — Monthly trends               [ANALYST, ADMIN]
 ```
 
 **Query params:** `dateFrom`, `dateTo`, `userId` (Admin/Analyst), `trendMonths`
@@ -401,8 +405,8 @@ The `ANALYST` role is read-only for records and insights. All record mutations (
 Dashboard endpoints use `CacheInterceptor` with per-route TTLs:
 - `/recent` — 30s (high churn)
 - `/summary` — 60s
-- `/categories` — 120s
-- `/trends` — 300s (slow-moving aggregates)
+- `/categories` — 120s (insights)
+- `/trends` — 300s (insights, slow-moving aggregates)
 
 Cache is keyed by the full request URL so different query parameters produce independent cache entries.
 

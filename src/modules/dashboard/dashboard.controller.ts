@@ -50,10 +50,11 @@ export class DashboardController {
   }
 
   @Get('categories')
+  @Roles(Role.ANALYST, Role.ADMIN)
   @CacheTTL(120)
   @ApiOperation({
     summary: 'Category-wise totals',
-    description: 'Returns income and expense totals grouped by category.',
+    description: 'ANALYST/ADMIN only. Returns income and expense totals grouped by category.',
   })
   @ApiOkResponse({ description: 'Category breakdown' })
   async getCategoryBreakdown(
@@ -64,10 +65,11 @@ export class DashboardController {
   }
 
   @Get('trends')
+  @Roles(Role.ANALYST, Role.ADMIN)
   @CacheTTL(300)
   @ApiOperation({
     summary: 'Monthly income/expense trends',
-    description: 'Returns monthly income, expense, and net figures for the specified window.',
+    description: 'ANALYST/ADMIN only. Returns monthly income, expense, and net figures for the specified window.',
   })
   @ApiOkResponse({ description: 'Monthly trend data' })
   async getMonthlyTrends(

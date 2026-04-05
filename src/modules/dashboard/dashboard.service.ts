@@ -33,6 +33,20 @@ export class DashboardService {
     const dateFrom = query.dateFrom ? new Date(query.dateFrom) : undefined;
     const dateTo = query.dateTo ? new Date(query.dateTo) : undefined;
 
+    if (currentUser.role === Role.VIEWER) {
+      const [summary, recentTransactions] = await Promise.all([
+        this.transactionsRepository.getSummary({ userId, dateFrom, dateTo }),
+        this.transactionsRepository.getRecentTransactions(userId, 10),
+      ]);
+
+      return {
+        summary,
+        categoryTotals: [],
+        monthlyTrends: [],
+        recentTransactions,
+      };
+    }
+
     const [summary, categoryTotals, monthlyTrends, recentTransactions] = await Promise.all([
       this.transactionsRepository.getSummary({ userId, dateFrom, dateTo }),
       this.transactionsRepository.getCategoryTotals({ userId, dateFrom, dateTo }),
