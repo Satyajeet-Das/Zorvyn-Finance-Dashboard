@@ -1,7 +1,7 @@
 // src/common/interceptors/request-id.interceptor.ts
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Observable } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RequestIdInterceptor implements NestInterceptor {
@@ -9,7 +9,7 @@ export class RequestIdInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    const requestId = (request.headers['x-request-id'] as string | undefined) ?? uuidv4();
+    const requestId = (request.headers['x-request-id'] as string | undefined) ?? randomUUID();
     request.requestId = requestId;
     response.setHeader('X-Request-Id', requestId);
 

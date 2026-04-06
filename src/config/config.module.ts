@@ -23,6 +23,7 @@ import redisConfig from './redis.config';
         JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
         REDIS_HOST: Joi.string().default('localhost'),
         REDIS_PORT: Joi.number().default(6379),
+        REDIS_USERNAME: Joi.string().allow('').default(''),
         REDIS_PASSWORD: Joi.string().allow('').default(''),
         REDIS_TTL: Joi.number().default(300),
         CORS_ORIGINS: Joi.string().required(),

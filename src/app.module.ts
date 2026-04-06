@@ -6,7 +6,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { redisStore } from 'cache-manager-redis-yet';
 import { LoggerModule } from 'nestjs-pino';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -42,6 +42,7 @@ import * as Joi from 'joi';
         JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
         REDIS_HOST: Joi.string().default('localhost'),
         REDIS_PORT: Joi.number().default(6379),
+        REDIS_USERNAME: Joi.string().allow('').default(''),
         REDIS_PASSWORD: Joi.string().allow('').default(''),
         REDIS_TTL: Joi.number().default(300),
         CORS_ORIGINS: Joi.string().required(),
@@ -63,7 +64,7 @@ import * as Joi from 'joi';
               ? { target: 'pino-pretty', options: { colorize: true, singleLine: true } }
               : undefined,
           genReqId: (req) =>
-            (req.headers['x-request-id'] as string | undefined) ?? uuidv4(),
+            (req.headers['x-request-id'] as string | undefined) ?? randomUUID(),
           serializers: {
             req: (req) => ({ id: req.id, method: req.method, url: req.url }),
             res: (res) => ({ statusCode: res.statusCode }),
@@ -96,6 +97,7 @@ import * as Joi from 'joi';
             host: config.get<string>('redis.host'),
             port: config.get<number>('redis.port'),
           },
+          username: config.get<string>('redis.username') || undefined,
           password: config.get<string>('redis.password') || undefined,
           ttl: config.get<number>('redis.ttl', 300),
         }),

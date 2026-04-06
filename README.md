@@ -244,6 +244,7 @@ Swagger UI is at `http://localhost:3000/api/docs`
 | `JWT_REFRESH_EXPIRES_IN` | | `30d` | Refresh token TTL |
 | `REDIS_HOST` | | `localhost` | Redis host |
 | `REDIS_PORT` | | `6379` | Redis port |
+| `REDIS_USERNAME` | | `` | Redis username (empty = no auth) |
 | `REDIS_PASSWORD` | | `` | Redis password (empty = no auth) |
 | `REDIS_TTL` | | `300` | Default cache TTL in seconds |
 | `CORS_ORIGINS` | ✅ | — | Comma-separated allowed origins |

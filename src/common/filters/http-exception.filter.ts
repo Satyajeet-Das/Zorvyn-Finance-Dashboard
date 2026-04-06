@@ -7,8 +7,8 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface ErrorResponse {
   statusCode: number;
@@ -28,7 +28,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const requestId = (request.headers['x-request-id'] as string) ?? uuidv4();
+    const requestId = (request.headers['x-request-id'] as string) ?? randomUUID();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
