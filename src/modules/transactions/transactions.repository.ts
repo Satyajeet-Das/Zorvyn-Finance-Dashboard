@@ -164,23 +164,27 @@ export class TransactionsRepository {
     dateFrom.setDate(1);
     dateFrom.setHours(0, 0, 0, 0);
 
-    const where = this.buildWhere({ ...options, dateFrom });
+    const scoped = { ...options, dateFrom };
+
+    const conditions: Prisma.Sql[] = [Prisma.sql`"deleted_at" IS NULL`];
+    if (scoped.userId) conditions.push(Prisma.sql`"user_id" = ${scoped.userId}`);
+    if (scoped.type) conditions.push(Prisma.sql`"type" = ${scoped.type}::"TransactionType"`);
+    if (scoped.category) conditions.push(Prisma.sql`"category" ILIKE ${`%${scoped.category}%`}`);
+    if (scoped.dateFrom) conditions.push(Prisma.sql`"date" >= ${scoped.dateFrom}`);
+    if (scoped.dateTo) conditions.push(Prisma.sql`"date" <= ${scoped.dateTo}`);
+    if (scoped.amountMin !== undefined) conditions.push(Prisma.sql`"amount" >= ${scoped.amountMin}`);
+    if (scoped.amountMax !== undefined) conditions.push(Prisma.sql`"amount" <= ${scoped.amountMax}`);
 
     const raw = await this.prisma.$queryRaw<
       Array<{ year: number; month: number; type: TransactionType; total: number }>
     >`
       SELECT
-        EXTRACT(YEAR FROM date)::int AS year,
-        EXTRACT(MONTH FROM date)::int AS month,
-        type,
-        SUM(amount)::float AS total
-      FROM transactions
-      WHERE ${Prisma.raw(
-        Object.entries(where)
-          .filter(([, v]) => v !== undefined)
-          .map(() => 'TRUE')
-          .join(' AND '),
-      )} deleted_at IS NULL
+        EXTRACT(YEAR FROM "date")::int AS year,
+        EXTRACT(MONTH FROM "date")::int AS month,
+        "type" AS type,
+        SUM("amount")::float AS total
+      FROM "transactions"
+      WHERE ${Prisma.join(conditions, ' AND ')}
       GROUP BY year, month, type
       ORDER BY year ASC, month ASC
     `;
